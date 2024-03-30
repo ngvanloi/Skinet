@@ -2,23 +2,28 @@
     <img
         src="/assets/images/logo.png"
         style="max-height: 70px;"
+        class="logo"
         alt="logo"
+        [routerLink]="['/']"
     >
     <nav
         class="my-2 my-md-0 me-md-3 text-uppercase"
         style="font-size: larger;"
     >
         <a
-            href="#"
-            class="p-2 text-dark"
+            [routerLink]="['/']"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            class="p-2"
         >Home</a>
         <a
-            href="#"
-            class="p-2 text-dark"
+            routerLink="/shop"
+            routerLinkActive="active"
+            class="p-2"
         >Shop</a>
         <a
             href="#"
-            class="p-2 text-dark"
+            class="p-2"
         >Context</a>
     </nav>
     <div class="d-flex align-items-center">
