@@ -35,7 +35,6 @@ export class ShopService {
 
     return this.http.get<IPagination>(this.baseUrl + "products", { observe: 'response', params })
       .pipe(
-        delay(1000),
         map((res) => {
           return res.body;
         })

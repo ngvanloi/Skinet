@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IProduct } from 'src/app/shared/models/product-return-to.dto.model';
 import { ShopService } from '../shop.service';
 import { ActivatedRoute } from '@angular/router';
+import { BreadcrumbService } from 'xng-breadcrumb';
 
 @Component({
   selector: 'app-product-details',
@@ -14,9 +15,12 @@ export class ProductDetailsComponent implements OnInit {
 
   constructor(
     private readonly shopService: ShopService,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly bcService: BreadcrumbService
   ) {
     this.id = parseInt(this.route.snapshot.params['id']);
+    this.bcService.set('@productDetails', '')
+
   }
 
   ngOnInit(): void {
@@ -29,6 +33,7 @@ export class ProductDetailsComponent implements OnInit {
     this.shopService.getProduct(id)
       .subscribe(res => {
         this.product = res;
+        this.bcService.set('@productDetails', this.product.name)
       }, error => {
         console.log(error);
       })
