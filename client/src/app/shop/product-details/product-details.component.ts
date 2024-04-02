@@ -3,6 +3,8 @@ import { IProduct } from 'src/app/shared/models/product-return-to.dto.model';
 import { ShopService } from '../shop.service';
 import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbService } from 'xng-breadcrumb';
+import { BasketService } from 'src/app/basket/basket.service';
+import { IBasketItem } from 'src/app/shared/models/basket-item';
 
 @Component({
   selector: 'app-product-details',
@@ -12,15 +14,16 @@ import { BreadcrumbService } from 'xng-breadcrumb';
 export class ProductDetailsComponent implements OnInit {
   product?: IProduct;
   id?: number;
+  quantity: number = 1;
 
   constructor(
     private readonly shopService: ShopService,
     private readonly route: ActivatedRoute,
-    private readonly bcService: BreadcrumbService
+    private readonly bcService: BreadcrumbService,
+    private readonly basketService: BasketService,
   ) {
     this.id = parseInt(this.route.snapshot.params['id']);
     this.bcService.set('@productDetails', '')
-
   }
 
   ngOnInit(): void {
@@ -39,4 +42,18 @@ export class ProductDetailsComponent implements OnInit {
       })
   }
 
+  incrementItemQuantity() {
+    this.quantity++;
+  }
+
+  decrementItemQuantity() {
+    if(this.quantity > 1) {
+      this.quantity--;
+    }
+  }
+
+  addToCart(){
+    if(!this.product) return;
+    this.basketService.addItemToBasket(this.product, this.quantity);
+  }
 }

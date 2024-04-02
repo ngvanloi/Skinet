@@ -30,7 +30,7 @@ namespace API.Controllers
             return Ok(updatedBasket);
         }
 
-        [HttpPost]
+        [HttpDelete]
         public async Task DeleteBasket(string id)
         {
             await _basketRepository.DeleteBasketAsync(id);
