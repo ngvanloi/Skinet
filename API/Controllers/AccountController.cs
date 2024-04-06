@@ -13,6 +13,7 @@ using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -34,7 +35,6 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-
             var user = await _userManager.FindByEmailFromClaimsPrinciple(HttpContext.User);
 
             return new UserDto
@@ -102,7 +102,7 @@ namespace API.Controllers
             {
                 return new BadRequestObjectResult(new ApiValidationErrorResponse { Errors = new[] { "Email address is in use" } });
             }
-            
+
             var user = new AppUser
             {
                 DisplayName = register.DisplayName,

@@ -1,0 +1,83 @@
+<div class="d-flex justify-content-center mt-5">
+    <form
+        *ngIf="registerForm"
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        style="width: 500px;"
+    >
+        <h1 class="h3 mb-3 fw-normal text-center">Register</h1>
+
+        <div class="form-floating mb-2">
+            <input
+                formControlName="displayName"
+                type="text"
+                class="form-control"
+                id="displayName"
+                placeholder="Display Name"
+            >
+            <label for="displayName">Display Name</label>
+            <span
+                class="text-danger"
+                *ngIf="registerForm.get('displayName')?.invalid &&
+                registerForm.get('displayName')?.touched &&
+                registerForm.get('displayName')?.errors?.['required']"
+            >
+                Display Name is required
+            </span>
+        </div>
+
+        <div class="form-floating mb-2">
+            <input
+                formControlName="email"
+                type="email"
+                class="form-control"
+                id="floatingInput"
+                placeholder="name@example.com"
+            >
+            <label for="floatingInput">Email address</label>
+            <span
+                class="text-danger"
+                *ngIf="registerForm.get('email')?.invalid &&
+            registerForm.get('email')?.touched &&
+            registerForm.get('email')?.errors?.['required']"
+            >
+                Email address is required
+            </span>
+            <span
+                class="text-danger"
+                *ngIf="registerForm.get('email')?.invalid &&
+            registerForm.get('email')?.touched &&
+            registerForm.get('email')?.errors?.['pattern']"
+            >
+                Email address is not valid
+            </span>
+        </div>
+
+        <div class="form-floating mb-2">
+            <input
+                formControlName="password"
+                type="password"
+                class="form-control"
+                id="floatingPassword"
+                placeholder="Password"
+            >
+            <label for="floatingPassword">Password</label>
+            <span
+                class="text-danger"
+                *ngIf="registerForm.get('password')?.invalid &&
+            registerForm.get('password')?.touched &&
+            registerForm.get('password')?.errors?.['required']"
+            >
+                Password is required
+            </span>
+        </div>
+
+        <ul class="text-danger list-unstyled" *ngIf="errors">
+            <li *ngFor="let error of errors">{{error}}</li>
+        </ul>
+        <button
+            class="w-100 btn btn-lg btn-primary"
+            type="submit"
+        >Register</button>
+    </form>
+</div>
