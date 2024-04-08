@@ -6,9 +6,9 @@ using API.Dtos;
 using API.Errors;
 using API.Extensions;
 using AutoMapper;
+using Core.Entities.OrderAggregate;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using StackExchange.Redis;
 
 namespace API.Controllers
 {
@@ -37,6 +37,33 @@ namespace API.Controllers
             }
 
             return Ok(order);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IReadOnlyList<OrderToReturnDto>>> GetOrdersForUser()
+        {
+            var email = HttpContext.User.RetrieveEmailFromPrincipal();
+
+            var order = await _orderService.GetOrdersForUserAsync(email);
+
+            return Ok(_mapper.Map<IReadOnlyList<OrderToReturnDto>>(order));
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<OrderToReturnDto>> GetOrderByIdForUSer(int id) {
+            var email = HttpContext.User.RetrieveEmailFromPrincipal();
+
+            var order = await _orderService.GetOrderByIdAsync(id, email);
+
+            if(order == null) return NotFound(new ApiResponse(404));
+
+            return Ok(_mapper.Map<OrderToReturnDto>(order));
+        }
+
+        [HttpGet("deliveryMethods")]
+        public async Task<ActionResult<IReadOnlyList<DeliveryMethod>>> GetDeliveryMethods() 
+        {
+            return Ok(await _orderService.GetDeliveryMethodsAsync());
         }
     }
 }

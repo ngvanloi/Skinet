@@ -16,8 +16,5 @@ namespace Core.Entities.OrderAggregate
 
         [EnumMember(Value ="Payment Failed")]
         PaymentFailed,
-
-        [EnumMember(Value ="Shipped")]
-        Shipped
     }
 }
