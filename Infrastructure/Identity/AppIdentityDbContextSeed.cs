@@ -25,7 +25,7 @@ namespace Infrastructure.Identity
                         Street = "no.1 169/42 Nguyen Tu Gian",
                         City = "HCM",
                         State = "VN",
-                        ZipCode = "7412856",
+                        Zipcode = "7412856",
                     }
                 };
 
