@@ -16,8 +16,15 @@
                 </cdk-step>
             </app-stepper>
         </div>
-        <div class="col-4">
-            <app-order-totals></app-order-totals>
+        <div
+            *ngIf="(basketTotal$ | async) as basketTotal"
+            class="col-4"
+        >
+            <app-order-totals
+                [shippingPrice]="basketTotal.shipping"
+                [subtotal]="basketTotal.subtotal"
+                [total]="basketTotal.total"
+            ></app-order-totals>
         </div>
     </div>
 </div>

@@ -12,6 +12,7 @@ import { CdkStepperModule } from '@angular/cdk/stepper';
 import { StepperComponent } from './components/stepper/stepper.component';
 import { BasketSummaryComponent } from './components/basket-summary/basket-summary.component';
 import { RouterModule } from '@angular/router';
+import { IsBasketSummaryTypeInterfacePipe } from './pipes/is-basket-summary-type.pipe';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { RouterModule } from '@angular/router';
     OrderTotalsComponent,
     TextInputComponent,
     StepperComponent,
-    BasketSummaryComponent
+    BasketSummaryComponent,
+    IsBasketSummaryTypeInterfacePipe
   ],
   imports: [
     CommonModule,
@@ -29,7 +31,7 @@ import { RouterModule } from '@angular/router';
     BsDropdownModule.forRoot(),
     ReactiveFormsModule,
     CdkStepperModule,
-    RouterModule
+    RouterModule,
   ],
   exports: [
     PaginationModule,
@@ -42,7 +44,7 @@ import { RouterModule } from '@angular/router';
     TextInputComponent,
     CdkStepperModule,
     StepperComponent,
-    BasketSummaryComponent
+    BasketSummaryComponent,
   ]
 })
 export class SharedModule { }
