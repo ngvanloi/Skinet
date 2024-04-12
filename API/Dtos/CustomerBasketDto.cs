@@ -10,8 +10,11 @@ namespace API.Dtos
     {
         [Required]
         public string Id { get; set; }
-        
+
         [Required]
         public List<BasketItemDto> Items { get; set; }
+        public int? DeliveryMethodId { get; set; }
+        public string? ClientSercret { get; set; }
+        public string? PaymentIntentId { get; set; }
     }
 }
