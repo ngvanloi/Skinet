@@ -1,7 +1,7 @@
 <div class="form-floating mb-2">
   <input
     #input
-    [ngClass]="(controlDir && controlDir.control && !controlDir.control.valid && controlDir.control.touched) ? !controlDir.control.valid ? 'is-invalid' : 'is-valid': ''"
+    [ngClass]="(controlDir && controlDir.control && controlDir.control.touched) ? !controlDir.control.valid ? 'is-invalid' : 'is-valid': ''"
     [type]="type"
     (input)="updateValue($event)"
     (blur)="onTouch()"

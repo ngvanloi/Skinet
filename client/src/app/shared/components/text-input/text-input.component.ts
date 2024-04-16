@@ -1,5 +1,5 @@
-import { Component, Input, Self, forwardRef } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
+import { Component, Input, Self } from '@angular/core';
+import { ControlValueAccessor, NgControl } from '@angular/forms';
 
 @Component({
   selector: 'app-text-input',
@@ -28,8 +28,8 @@ export class TextInputComponent implements ControlValueAccessor {
     this.onTouch = fn;
   }
 
-  onChange: any = () => {};
-  onTouch: any = () => {};
+  onChange: any = () => { };
+  onTouch: any = () => { };
 
   updateValue(event: Event): void {
     const newValue = (event.target as HTMLInputElement).value;
@@ -37,5 +37,4 @@ export class TextInputComponent implements ControlValueAccessor {
     this.onChange(newValue);
     this.onTouch();
   }
-
 }
