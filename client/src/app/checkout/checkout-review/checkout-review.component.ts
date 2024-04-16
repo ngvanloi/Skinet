@@ -26,7 +26,8 @@ export class CheckoutReviewComponent implements OnInit{
       next: () => {
         this.appStepper?.next();
       },
-      error: error => this.toastr.error(error.message)
+      error: error => console.log(error)
+      
     })
   }
 
