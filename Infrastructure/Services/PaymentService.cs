@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
 using Core.Interfaces;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Core.Specifications;
 using Microsoft.Extensions.Configuration;
 using Stripe;
-using Stripe.Climate;
+using Order = Core.Entities.OrderAggregate.Order;
 
 namespace Infrastructure.Services
 {
@@ -28,6 +28,12 @@ namespace Infrastructure.Services
         {
             StripeConfiguration.ApiKey = _config["StripeSettings:SecretKey"];
             var basket = await _basketRepo.GetBasketAsync(basketId);
+
+            if (basket == null)
+            {
+                return null;
+            }
+
             var shippingPrice = 0m;
 
             if (basket.DeliveryMethodId.HasValue)
@@ -72,6 +78,35 @@ namespace Infrastructure.Services
 
             await _basketRepo.UpdateBasketAsync(basket);
             return basket;
+        }
+
+        public async Task<Order> UpdateOrderPaymentFailed(string paymentIntentId)
+        {
+            var spec = new OrderByPaymentIntentIdSpecification(paymentIntentId);
+            var order = await _uow.Repository<Order>().GetEntityWithSpec(spec);
+
+            if (order == null) return null;
+
+            order.Status = OrderStatus.PaymentFailed;
+
+            await _uow.Complete();
+
+            return order;
+        }
+
+        public async Task<Order> UpdateOrderPaymentSucceeded(string paymentIntentId)
+        {
+            var spec = new OrderByPaymentIntentIdSpecification(paymentIntentId);
+            var order = await _uow.Repository<Order>().GetEntityWithSpec(spec);
+
+            if (order == null) return null;
+
+            order.Status = OrderStatus.PaymentRecevied;
+            _uow.Repository<Order>().Update(order);
+
+            await _uow.Complete();
+
+            return order;
         }
     }
 }
