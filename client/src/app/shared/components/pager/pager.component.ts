@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-pager',
@@ -9,6 +8,8 @@ import { Subject } from 'rxjs';
 export class PagerComponent implements OnInit {
   @Input() totalCount?: number;
   @Input() pageSize?: number;
+  @Input() pageNumber?: number;
+
   @Output() pageChanged: EventEmitter<number> = new EventEmitter<number>();
 
   constructor() { }

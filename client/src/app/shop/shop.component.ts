@@ -24,44 +24,56 @@ export class ShopComponent implements OnInit {
     { name: "Price: High to Low", value: "pricedesc" },
   ];
 
-  shopParams = new ShopParams();
+  shopParams: ShopParams;
   totalCount: number = 0;
 
-  constructor(private readonly shopService: ShopService) { }
+  constructor(private readonly shopService: ShopService) {
+    this.shopParams = this.shopService.getShopParams();
+  }
 
   ngOnInit(): void {
-    this.getProducts();
+    this.getProducts(true);
     this.getBrands();
     this.getTypes();
   }
 
   onBrandSelected(brandId: number): void {
-    this.shopParams.brandId = brandId;
-    this.shopParams.pageNumber = 1;
+    const params = this.shopService.getShopParams();
+    params.brandId = brandId;
+    params.pageNumber = 1;
+    this.shopService.setShopParams(params);
     this.getProducts();
   }
 
   onTypeSelected(typeId: number): void {
-    this.shopParams.typeId = typeId;
-    this.shopParams.pageNumber = 1;
+    const params = this.shopService.getShopParams();
+    params.typeId = typeId;
+    params.pageNumber = 1;
+    this.shopService.setShopParams(params);
     this.getProducts();
   }
 
   onSortSelected(evt: Event): void {
-    this.shopParams.sort = (evt.target as HTMLInputElement).value;
+    const params = this.shopService.getShopParams();
+    params.sort = (evt.target as HTMLInputElement).value;
+    this.shopService.setShopParams(params);
     this.getProducts();
   }
 
   onPageChange(page: any): void {
-    if (this.shopParams.pageNumber !== page) {
-      this.shopParams.pageNumber = page;
-      this.getProducts();
+    const params = this.shopService.getShopParams();
+    if (params.pageNumber !== page) {
+      params.pageNumber = page;
+      this.shopService.setShopParams(params);
+      this.getProducts(true);
     }
   }
 
   onSearch(): void {
-    this.shopParams.search = this.searchInput?.nativeElement.value;
-    this.shopParams.pageNumber = 1;
+    const params = this.shopService.getShopParams();
+    params.search = this.searchInput?.nativeElement.value;
+    params.pageNumber = 1;
+    this.shopService.setShopParams(params);
     this.getProducts();
   }
 
@@ -70,16 +82,15 @@ export class ShopComponent implements OnInit {
       this.searchInput.nativeElement.value = '';
     }
     this.shopParams = new ShopParams();
+    this.shopService.setShopParams(this.shopParams);
     this.getProducts();
   }
 
-  getProducts(): void {
-    this.shopService.getProducts(this.shopParams)
+  getProducts(useCache: boolean = false): void {
+    this.shopService.getProducts(useCache)
       .subscribe((res: IPagination | null) => {
         if (res) {
           this.products = res.data;
-          this.shopParams.pageNumber = res.pageIndex;
-          this.shopParams.pageSize = res.pageSize;
           this.totalCount = res.count;
         }
       }, error => {
