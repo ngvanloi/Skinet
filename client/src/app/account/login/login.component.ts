@@ -1,16 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountService } from '../account.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, tap } from 'rxjs';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm?: FormGroup;
   returnUrl: string = '/shop';
+
+  private unsubscribe$: Subject<void> = new Subject<void>();
 
   constructor(
     private readonly accountService: AccountService,
@@ -20,6 +23,11 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/shop';
     this.createLoginform();
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   createLoginform() {
@@ -33,11 +41,12 @@ export class LoginComponent implements OnInit {
     if (!this.loginForm) return;
 
     this.accountService.login(this.loginForm.value)
-      .subscribe(() => {
-        this.router.navigateByUrl(this.returnUrl);
-        console.log('user login');
-      }, error => {
-        console.log(error);
-      });
+      .pipe(
+        tap(() => {
+          this.router.navigateByUrl(this.returnUrl);
+          console.log('user login');
+        })
+      )
+      .subscribe();
   }
 }

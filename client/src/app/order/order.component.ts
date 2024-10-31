@@ -1,14 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { OrderService } from './order.service';
 import { IOrder } from '../shared/models/order';
+import { Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-order',
   templateUrl: './order.component.html',
   styleUrls: ['./order.component.scss']
 })
-export class OrderComponent implements OnInit {
+export class OrderComponent implements OnInit, OnDestroy {
   orders: IOrder[] = [];
+
+  private unsubscribe$: Subject<void> = new Subject<void>();
 
   constructor(private readonly orderService: OrderService) { }
 
@@ -16,15 +19,19 @@ export class OrderComponent implements OnInit {
     this.getOrdersForUser();
   }
 
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   getOrdersForUser() {
     return this.orderService.getOrdersForUser()
-      .subscribe((res: IOrder[]) => {
-        if (res) {
+      .pipe(
+        tap((res: IOrder[]) => {
           this.orders = res;
-        }
-      }, error => {
-        console.log(error);
-      })
+        }),
+        takeUntil(this.unsubscribe$)
+      ).subscribe();
   }
 
 }

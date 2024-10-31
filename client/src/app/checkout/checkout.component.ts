@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AccountService } from '../account/account.service';
 import { BasketService } from '../basket/basket.service';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { IBasketTotals } from '../shared/models/basket';
 
 @Component({
@@ -24,7 +24,7 @@ export class CheckoutComponent implements OnInit {
     this.basketTotal$ = this.basketService.basketTotal$;
     this.createCheckoutForm();
     this.getAddressFormValues();
-    this.getDeliveryMethodValue();
+    this.loadDeliveryMethodValue();
   }
 
   createCheckoutForm() {
@@ -49,21 +49,24 @@ export class CheckoutComponent implements OnInit {
 
   getAddressFormValues() {
     this.accountService.getUserAddress()
-      .subscribe((address) => {
-        if (address && this.checkoutForm) {
-          this.checkoutForm.get('addressForm')?.patchValue({
-            firstName: address.firstName,
-            lastName: address.lastName,
-            street: address.street,
-            city: address.city,
-            state: address.state,
-            zipcode: address.zipcode,
-          });
-        }
-      }, error => { console.log(error) })
+      .pipe(
+        tap((address) => {
+          if (address && this.checkoutForm) {
+            this.checkoutForm.get('addressForm')?.patchValue({
+              firstName: address.firstName,
+              lastName: address.lastName,
+              street: address.street,
+              city: address.city,
+              state: address.state,
+              zipcode: address.zipcode,
+            });
+          }
+        })
+      )
+      .subscribe();
   }
 
-  getDeliveryMethodValue() {
+  loadDeliveryMethodValue() {
     const basket = this.basketService.getCurrentBasketValue();
     if (basket && basket.deliveryMethodId && this.checkoutForm) {
       this.checkoutForm.get('deliveryForm')?.get('deliveryMethod')

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AsyncValidatorFn, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AccountService } from '../account.service';
 import { Router } from '@angular/router';
-import { map, of, switchMap, timer } from 'rxjs';
+import { map, of, switchMap, tap, timer } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -22,9 +22,9 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.fb.group({
       displayName: [null, [Validators.required]],
       email: [null,
-         [Validators.required, Validators.pattern("^\\w+[\\w-\\.]*\\@\\w+((-\\w+)|(\\w*))\\.[a-z]{2,3}$")],
-         [this.validateEmailNotTaken()]
-        ],
+        [Validators.required, Validators.pattern("^\\w+[\\w-\\.]*\\@\\w+((-\\w+)|(\\w*))\\.[a-z]{2,3}$")],
+        [this.validateEmailNotTaken()]
+      ],
       password: [null, [Validators.required]]
     })
   }
@@ -33,12 +33,12 @@ export class RegisterComponent implements OnInit {
     if (!this.registerForm) return;
 
     this.accountService.register(this.registerForm.value)
-      .subscribe(() => {
-        this.router.navigateByUrl('/shop');
-      }, error => {
-        console.log(error);
-        this.errors = error.errors;
-      });
+      .pipe(
+        tap(() => {
+          this.router.navigateByUrl('/shop');
+        })
+      )
+      .subscribe();
   }
 
   validateEmailNotTaken(): AsyncValidatorFn {

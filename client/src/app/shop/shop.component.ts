@@ -1,18 +1,18 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { IProduct } from '../shared/models/product-return-to.dto.model';
 import { ShopService } from './shop.service';
-import { error } from 'console';
 import { IType } from '../shared/models/product-type';
 import { IBrand } from '../shared/models/brand';
-import { IPagination } from '../shared/models/pagination';
+import { IPagination, Pagination } from '../shared/models/pagination';
 import { ShopParams } from '../shared/models/shopParams';
+import { catchError, debounceTime, forkJoin, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-shop',
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss']
 })
-export class ShopComponent implements OnInit {
+export class ShopComponent implements OnInit, OnDestroy {
   @ViewChild('search', { static: false }) searchInput?: ElementRef;
 
   products: IProduct[] = [];
@@ -27,54 +27,117 @@ export class ShopComponent implements OnInit {
   shopParams: ShopParams;
   totalCount: number = 0;
 
+  private unsubscribe$: Subject<void> = new Subject<void>();
+  private searchDebounce$: Subject<string> = new Subject<string>();
+  private filterChange$: Subject<void> = new Subject<void>();
+
   constructor(private readonly shopService: ShopService) {
     this.shopParams = this.shopService.getShopParams();
   }
 
   ngOnInit(): void {
-    this.getProducts(true);
-    this.getBrands();
-    this.getTypes();
+    this.loadInitialData();
+    this.setupSearchDebounce();
+    this.setupFilterChange();
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+  private loadInitialData(): void {
+    forkJoin({
+      products: this.getProducts(true),
+      brands: this.shopService.getBrands().pipe(
+        catchError((error) => {
+          console.error('Failed to retrieve brands:', error);
+          return of([{ id: 0, name: 'All' }]);
+        })
+      ),
+      types: this.shopService.getTypes().pipe(
+        catchError((error) => {
+          console.error('Failed to retrieve types:', error);
+          return of([{ id: 0, name: 'All' }]);
+        })
+      )
+    })
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(({ products, brands, types }) => {
+        if (products) {
+          this.products = products.data;
+          this.totalCount = products.count;
+        }
+        this.brands = [{ id: 0, name: 'All' }, ...brands];
+        this.types = [{ id: 0, name: 'All' }, ...types];
+      });
+  }
+
+  private setupFilterChange(): void {
+    this.filterChange$
+      .pipe(
+        switchMap(() => this.getProducts()),
+        catchError((error) => {
+          console.error('Failed to retrieve products during filter change:', error);
+          return of(null);
+        }),
+        takeUntil(this.unsubscribe$)
+      )
+      .subscribe(res => {
+        if (res) {
+          this.products = res.data;
+          this.totalCount = res.count;
+        }
+      });
+  }
+
+  private setupSearchDebounce(): void {
+    this.searchDebounce$
+      .pipe(
+        debounceTime(300),
+        switchMap(search => {
+          this.onUpdateShopParams({ search });
+          return this.getProducts();
+        }),
+        takeUntil(this.unsubscribe$)
+      )
+      .subscribe(res => {
+        if (res) {
+          this.products = res.data;
+          this.totalCount = res.count;
+        }
+      });
+  }
+
+  private onUpdateShopParams(paramsUpdate: Partial<ShopParams>): void {
+    this.shopParams = { ...this.shopParams, ...paramsUpdate, pageNumber: 1 };
+    this.shopService.setShopParams(this.shopParams);
+    this.filterChange$.next(); 
   }
 
   onBrandSelected(brandId: number): void {
-    const params = this.shopService.getShopParams();
-    params.brandId = brandId;
-    params.pageNumber = 1;
-    this.shopService.setShopParams(params);
-    this.getProducts();
+    this.onUpdateShopParams({ brandId });
   }
 
   onTypeSelected(typeId: number): void {
-    const params = this.shopService.getShopParams();
-    params.typeId = typeId;
-    params.pageNumber = 1;
-    this.shopService.setShopParams(params);
-    this.getProducts();
+    this.onUpdateShopParams({ typeId });
   }
 
   onSortSelected(evt: Event): void {
-    const params = this.shopService.getShopParams();
-    params.sort = (evt.target as HTMLInputElement).value;
-    this.shopService.setShopParams(params);
-    this.getProducts();
+    const sort = (evt.target as HTMLInputElement).value;
+    this.onUpdateShopParams({ sort });
   }
 
   onPageChange(page: any): void {
     const params = this.shopService.getShopParams();
     if (params.pageNumber !== page) {
-      params.pageNumber = page;
-      this.shopService.setShopParams(params);
-      this.getProducts(true);
+      this.onUpdateShopParams({ pageNumber: page });
     }
   }
 
   onSearch(): void {
-    const params = this.shopService.getShopParams();
-    params.search = this.searchInput?.nativeElement.value;
-    params.pageNumber = 1;
-    this.shopService.setShopParams(params);
-    this.getProducts();
+    const searchValue = this.searchInput?.nativeElement.value || '';
+    this.searchDebounce$.next(searchValue);
   }
 
   onReset(): void {
@@ -86,34 +149,16 @@ export class ShopComponent implements OnInit {
     this.getProducts();
   }
 
-  getProducts(useCache: boolean = false): void {
-    this.shopService.getProducts(useCache)
-      .subscribe((res: IPagination | null) => {
-        if (res) {
-          this.products = res.data;
-          this.totalCount = res.count;
-        }
-      }, error => {
-        console.log(error);
-      })
-  }
-
-
-  getBrands(): void {
-    this.shopService.getBrands()
-      .subscribe((res: IBrand[]) => {
-        this.brands = [{ id: 0, name: "All" }, ...res];
-      }, error => {
-        console.log(error);
-      })
-  }
-
-  getTypes(): void {
-    this.shopService.getTypes()
-      .subscribe((res: IType[]) => {
-        this.types = [{ id: 0, name: "All" }, ...res];
-      }, error => {
-        console.log(error);
-      })
+  getProducts(useCache: boolean = false): Observable<Pagination | null> {
+    return this.shopService.getProducts(useCache)
+      .pipe(
+        takeUntil(this.unsubscribe$),
+        tap((res: IPagination | null) => {
+          if (res) {
+            this.products = res.data;
+            this.totalCount = res.count;
+          }
+        }),
+      )
   }
 }

@@ -1,20 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { IProduct } from 'src/app/shared/models/product-return-to.dto.model';
 import { ShopService } from '../shop.service';
 import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbService } from 'xng-breadcrumb';
 import { BasketService } from 'src/app/basket/basket.service';
-import { IBasketItem } from 'src/app/shared/models/basket-item';
+import { Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-product-details',
   templateUrl: './product-details.component.html',
   styleUrls: ['./product-details.component.scss']
 })
-export class ProductDetailsComponent implements OnInit {
+export class ProductDetailsComponent implements OnInit, OnDestroy {
   product?: IProduct;
   id?: number;
   quantity: number = 1;
+
+  private unsubscribe$: Subject<void> = new Subject<void>();
 
   constructor(
     private readonly shopService: ShopService,
@@ -32,14 +34,21 @@ export class ProductDetailsComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
   getProduct(id: number): void {
     this.shopService.getProduct(id)
-      .subscribe(res => {
-        this.product = res;
-        this.bcService.set('@productDetails', this.product.name)
-      }, error => {
-        console.log(error);
-      })
+      .pipe(
+        takeUntil(this.unsubscribe$),
+        tap(res => {
+          this.product = res;
+          this.bcService.set('@productDetails', this.product.name)
+        })
+      )
+      .subscribe()
   }
 
   incrementItemQuantity() {
@@ -47,13 +56,13 @@ export class ProductDetailsComponent implements OnInit {
   }
 
   decrementItemQuantity() {
-    if(this.quantity > 1) {
+    if (this.quantity > 1) {
       this.quantity--;
     }
   }
 
-  addToCart(){
-    if(!this.product) return;
+  addToCart() {
+    if (!this.product) return;
     this.basketService.addItemToBasket(this.product, this.quantity);
   }
 }

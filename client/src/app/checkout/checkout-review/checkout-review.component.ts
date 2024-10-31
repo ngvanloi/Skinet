@@ -1,7 +1,7 @@
 import { CdkStepper } from '@angular/cdk/stepper';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil, tap } from 'rxjs';
 import { BasketService } from 'src/app/basket/basket.service';
 import { IBasket } from 'src/app/shared/models/basket';
 
@@ -10,10 +10,12 @@ import { IBasket } from 'src/app/shared/models/basket';
   templateUrl: './checkout-review.component.html',
   styleUrls: ['./checkout-review.component.scss']
 })
-export class CheckoutReviewComponent implements OnInit{
+export class CheckoutReviewComponent implements OnInit, OnDestroy{
   @Input() appStepper?: CdkStepper;
 
   basket$?: Observable<IBasket>;
+
+  private unsubscribe$: Subject<void> = new Subject<void>();
 
   constructor(private basketService: BasketService, private toastr: ToastrService) { }
 
@@ -21,14 +23,17 @@ export class CheckoutReviewComponent implements OnInit{
     this.basket$ = this.basketService.basket$;
   }
 
-  createPaymentIntent() {
-    this.basketService.createPaymentIntent().subscribe({
-      next: () => {
-        this.appStepper?.next();
-      },
-      error: error => console.log(error)
-      
-    })
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
+  createPaymentIntent() {
+    this.basketService.createPaymentIntent()
+    .pipe(
+      tap(_ => this.appStepper?.next()),
+      takeUntil(this.unsubscribe$)
+    )
+    .subscribe();
+  }
 }

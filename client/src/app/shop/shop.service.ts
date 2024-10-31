@@ -1,17 +1,18 @@
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, delay, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { IPagination, Pagination } from '../shared/models/pagination';
 import { IBrand } from '../shared/models/brand';
 import { IType } from '../shared/models/product-type';
 import { ShopParams } from '../shared/models/shopParams';
 import { IProduct } from '../shared/models/product-return-to.dto.model';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ShopService {
-  baseUrl: string = "https://localhost:7191/api/";
+  baseUrl: string = environment.apiUrl;
   products: IProduct[] = [];
   brands: IBrand[] = [];
   types: IType[] = [];
@@ -59,6 +60,10 @@ export class ShopService {
             this.pagination = res.body;
           }
           return res.body;
+        }),
+        catchError((error) => {
+          console.error('Failed to retrieve products from server:', error);
+          return of(null);
         })
       )
   }
@@ -76,7 +81,13 @@ export class ShopService {
     if (product) {
       return of(product);
     }
-    return this.http.get<IProduct>(this.baseUrl + "products/" + id);
+    return this.http.get<IProduct>(this.baseUrl + "products/" + id)
+      .pipe(
+        catchError((error) => {
+          console.error('Failed to retrieve product from server:', error);
+          return of();
+        })
+      );
   }
 
   getBrands(): Observable<IBrand[]> {
@@ -88,8 +99,12 @@ export class ShopService {
         map(res => {
           this.brands = res;
           return res;
+        }),
+        catchError((error) => {
+          console.error('Failed to retrieve brands from server:', error);
+          return of([]);
         })
-      );;
+      );
   }
 
   getTypes(): Observable<IType[]> {
@@ -101,6 +116,10 @@ export class ShopService {
         map(res => {
           this.types = res;
           return res;
+        }),
+        catchError((error) => {
+          console.error('Failed to retrieve types from server:', error);
+          return of([]);
         })
       );
   }

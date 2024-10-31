@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { Subject, takeUntil, tap } from 'rxjs';
 import { AccountService } from 'src/app/account/account.service';
 
 @Component({
@@ -11,14 +12,24 @@ import { AccountService } from 'src/app/account/account.service';
 export class CheckoutAddressComponent {
   @Input() checkoutForm?: FormGroup;
 
-  constructor(private accountService: AccountService, private toastr: ToastrService) {}
+  private unsubscribe$: Subject<void> = new Subject<void>();
+
+  constructor(private accountService: AccountService, private toastr: ToastrService) { }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
 
   saveUserAddress() {
-    this.accountService.updateUserAddress(this.checkoutForm?.get('addressForm')?.value).subscribe({
-      next: () => {
-        this.toastr.success('Address saved');
-        this.checkoutForm?.get('addressForm')?.reset(this.checkoutForm?.get('addressForm')?.value);
-      }
-    })
+    this.accountService.updateUserAddress(this.checkoutForm?.get('addressForm')?.value)
+      .pipe(
+        tap(_ => {
+          this.toastr.success('Address saved');
+          this.checkoutForm?.get('addressForm')?.reset(this.checkoutForm?.get('addressForm')?.value);
+        }),
+        takeUntil(this.unsubscribe$),
+      )
+      .subscribe()
   }
 }
